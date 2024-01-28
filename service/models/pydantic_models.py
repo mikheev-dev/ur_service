@@ -1,14 +1,14 @@
 from tortoise import Tortoise
 from tortoise.contrib.pydantic import pydantic_model_creator
 
-from db_models import (
+from service.models.db_models import (
     Category,
     Manufacturer,
     Model,
     Part,
 )
 
-Tortoise.init_models(['db_models'], "models")
+Tortoise.init_models(['service.models.db_models'], "models")
 
 CategoryPydantic = pydantic_model_creator(Category)
 ManufacturerPydantic = pydantic_model_creator(Manufacturer)

@@ -1,6 +1,5 @@
 from tortoise.models import Model as TModel
 from tortoise import fields
-from tortoise.contrib.pydantic import pydantic_model_creator
 
 
 class Manufacturer(TModel):

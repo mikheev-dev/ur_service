@@ -1,30 +1,34 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from tortoise.contrib.fastapi import register_tortoise
-from tortoise.expressions import Q
 from typing import List, Optional
 
+import logging
+
 from config import PSQLConfig
-from db_models import (
-    Category,
-    Manufacturer,
-    Model,
-    Part,
-)
-from pydantic_models import (
+from service.models.pydantic_models import (
     CategoryPydantic,
     ManufacturerPydantic,
     ModelPydantic,
     PartPydantic,
 )
+from service.views.category_view import CategoryView
+from service.views.manufacturer_view import ManufacturerView
+from service.views.model_view import ModelView
+from service.views.part_view import PartView
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 app = FastAPI(title="URParts")
 
 register_tortoise(
     app,
     db_url=PSQLConfig.connection_string(),
-    modules={"models": ["db_models"]},
+    modules={"models": ["service.models.db_models"]},
     generate_schemas=False,
     add_exception_handlers=True,
 )
@@ -36,33 +40,35 @@ class Status(BaseModel):
 
 @app.get("/manufacturers", response_model=List[ManufacturerPydantic])
 async def get_manufacturers():
-    return await ManufacturerPydantic.from_queryset(Manufacturer.all())
+    return await ManufacturerView.get_all_manufacturers()
 
 
 @app.get("/categories", response_model=List[CategoryPydantic])
 async def get_categories():
-    return await CategoryPydantic.from_queryset(Category.all())
+    return await CategoryView.get_all_categories()
 
 
 @app.get("/model/{model_id}", response_model=ModelPydantic)
-async def get_model(model_id: int):
-    return await ModelPydantic.from_queryset_single(Model.get(id=model_id))
+async def get_model_by_id(model_id: int):
+    return await ModelView.get_model_by_id(model_id=model_id)
 
 
 @app.get("/models", response_model=List[ModelPydantic])
 async def get_models(manufacturer_name: Optional[str] = None):
-    if not manufacturer_name:
-        models = Model.all()
-    else:
-        models = Model.filter(manufacturer__name=manufacturer_name)
-
-    return await ModelPydantic.from_queryset(models)
+    return await ModelView.get_models(manufacturer_name=manufacturer_name)
 
 
 @app.get("/parts/{model_id}", response_model=List[PartPydantic])
 async def get_parts_for_model(model_id: int, category_name: Optional[str] = None):
-    if not category_name:
-        parts = Part.filter(models__id=model_id)
-    else:
-        parts = Part.filter(Q(models__id=model_id) & Q(categories__name=category_name))
-    return await PartPydantic.from_queryset(parts)
+    return await PartView.get_parts_for_model(model_id=model_id, category_name=category_name)
+
+
+@app.get("/part/{part_id}", response_model=PartPydantic)
+async def get_part_by_id(part_id: int):
+    return await PartView.get_part_by_id(part_id=part_id)
+
+
+@app.get("/models_for_part/{part_id}", response_model=List[ModelPydantic])
+async def get_part_compatible_models(part_id: int):
+    return await PartView.get_part_compatible_models(part_id=part_id)
+
