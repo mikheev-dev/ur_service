@@ -1,0 +1,6 @@
+pydantic==2.5.3
+psycopg2-binary==2.9.9
+SQLAlchemy==2.0.25
+fastapi==0.109.0
+tortoise-orm[asyncpg]==0.20.0
+uvicorn==0.27.0
