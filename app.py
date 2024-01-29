@@ -23,7 +23,46 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-app = FastAPI(title="URParts")
+description = """
+URParts API allows you to get manufacturers, categories, models, parts. 🚀
+
+## Manufacturers
+
+You can **get manufacturers** list.
+
+## Categories
+
+You can **get categories** list.
+
+## Models
+
+You can:
+* **get model by id** 
+* **get all models** (optional of specific _manufacturer_)
+
+## Parts
+
+You can:
+* **get part by id** 
+* **get parts for a model** (optional for specific _category_ of parts)
+* **get all models for part** which are compatible with this part
+"""
+
+app = FastAPI(
+    title="URParts",
+    description=description,
+    summary="Web-service to get parts and related information",
+    version="0.0.1",
+    contact={
+        "name": "Pavel Mikheev",
+        "url": "https://github.com/mikheev-dev",
+        "email": "mikheevpav@gmail.com",
+    },
+    license_info={
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
+    },
+)
 
 register_tortoise(
     app,

@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from tortoise.exceptions import OperationalError
+from tortoise.exceptions import OperationalError, DoesNotExist
 from tortoise.expressions import Q
 from typing import List, Optional, Tuple
 
@@ -18,6 +18,8 @@ class PartView:
     async def get_part_by_id(part_id: int) -> PartPydantic:
         try:
             return await PartPydantic.from_queryset_single(Part.get(id=part_id))
+        except DoesNotExist as e:
+            raise e
         except OperationalError as e:
             logger.error(f"Exception {e} occurred")
             raise HTTPException(status_code=404, detail=f"Part {part_id} is not ready.")
@@ -28,11 +30,14 @@ class PartView:
             category_name: Optional[str] = None
     ) -> List[PartPydantic]:
         try:
+            await Model.get(id=model_id)
             if not category_name:
                 parts = Part.filter(models__id=model_id)
             else:
                 parts = Part.filter(Q(models__id=model_id) & Q(categories__name=category_name))
             return await PartPydantic.from_queryset(parts)
+        except DoesNotExist as e:
+            raise e
         except OperationalError as e:
             logger.error(f"Exception {e} occurred")
             raise HTTPException(status_code=404, detail=f"Parts are not ready.")
@@ -45,6 +50,8 @@ class PartView:
                 ModelPydantic.from_tortoise_orm(m)
                 for m in part.models
             ]))
+        except DoesNotExist as e:
+            raise e
         except OperationalError as e:
             logger.error(f"Exception {e} occurred")
-            raise HTTPException(status_code=404, detail=f"Part {part_id} are not ready.")
+            raise HTTPException(status_code=404, detail=f"Part {part_id} is not ready.")

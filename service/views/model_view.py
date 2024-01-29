@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from tortoise.exceptions import OperationalError
+from tortoise.exceptions import OperationalError, DoesNotExist
 from typing import List, Optional
 
 import logging
@@ -16,9 +16,11 @@ class ModelView:
     async def get_model_by_id(model_id: int) -> ModelPydantic:
         try:
             return await ModelPydantic.from_queryset_single(Model.get(id=model_id))
+        except DoesNotExist as e:
+            raise e
         except OperationalError as e:
             logger.error(f"Exception {e} occurred")
-            raise HTTPException(status_code=404, detail=f"Model {model_id} are not ready.")
+            raise HTTPException(status_code=404, detail=f"Model {model_id} is not ready.")
 
     @staticmethod
     async def get_models(manufacturer_name: Optional[str] = None) -> List[ModelPydantic]:
